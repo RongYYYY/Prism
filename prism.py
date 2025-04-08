@@ -328,12 +328,56 @@ def draw_color_buttons():
         pygame.draw.rect(screen, color, rect)
 
 board = Board()
-plate1 = Plates(1, GRAY, (0, 0), [(0, 0), (10, 0), (10, 10), (0, 10)])
-plate2 = Plates(1, GRAY, (20, 20), [(0, 0), (10, 0), (0, 10)])
-plate3 = Plates(2, GRAY, (15, 15), [(5, 5)])
+
+
+# LEVEL 1: MOON
+# plate1 = Plates(2, GRAY, (20, 20), [(7, 7)])
+# plate2 = Plates(2, GRAY, (15, 15), [(10, 10)])
+# board.add_plate(plate1)
+# board.add_plate(plate2)
+
+# LEVEL 2: CLOUD
+# plate1 = Plates(1, GRAY, (0, 0), [(0, 0), (12, 0), (12, 12), (0, 12)])
+# plate2 = Plates(2, GRAY, (20, 20), [(3, 3)])
+# plate3 = Plates(2, GRAY, (15, 15), [(5, 5)])
+# board.add_plate(plate1)
+# board.add_plate(plate2)
+# board.add_plate(plate3)
+
+# LEVEL 3: HEART
+# plate1 = Plates(1, GRAY, (10, 10), [(0, 0), (8, 8), (16, 0), (8, -8)])
+# plate2 = Plates(2, GRAY, (20, 20), [(4*2**0.5, 4*2**0.5)])
+# plate3 = Plates(2, GRAY, (15, 15), [(4*2**0.5, 4*2**0.5)])
+# board.add_plate(plate1)
+# board.add_plate(plate2)
+# board.add_plate(plate3)
+
+# LEVEL 4: TARGET
+# plate1 = Plates(2, GRAY, (10, 10), [(7, 7)])
+# plate2 = Plates(2, GRAY, (20, 20), [(4, 4)])
+# plate3 = Plates(2, GRAY, (15, 15), [(10, 10)])
+# board.add_plate(plate1)
+# board.add_plate(plate2)
+# board.add_plate(plate3)
+
+# LEVEL 5: YOUTUBE
+# plate1 = Plates(1, GRAY, (5, 5), [(0, 0), (16, 0), (16, 10), (0, 10)])
+# plate2 = Plates(1, GRAY, (20, 15), [(0, 0), (5, 3), (0, 6)])
+# plate3 = Plates(1, GRAY, (10, 20), [(0, 0), (5, 3), (0, 6)])
+# board.add_plate(plate1)
+# board.add_plate(plate2)
+# board.add_plate(plate3)
+
+# LEVEL 6: MAP
+plate1 = Plates(1, GRAY, (17, 5), [(0, 0), (8, 8), (16, 0)])
+plate2 = Plates(2, GRAY, (20, 20), [(10, 10)])
+plate3 = Plates(2, GRAY, (7, 7), [(4*2**0.5, 4*2**0.5)])
+plate4 = Plates(2, GRAY, (8, 15), [(4*2**0.5, 4*2**0.5)])
 board.add_plate(plate1)
 board.add_plate(plate2)
 board.add_plate(plate3)
+board.add_plate(plate4)
+
 
 selected_plate = None
 
