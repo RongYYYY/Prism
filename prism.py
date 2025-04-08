@@ -397,6 +397,27 @@ while running:
         isoBoard.draw_board(screen)      # Draw plates
         isoBoard.draw_grid()             # Draw grid on top
         isoProjection.draw_projection(screen, blit_position=(400, 0))
+
+        # Light visualization
+        LIGHT = (255, 255, 100, 80)
+        light_source = (80, 300)
+
+        all_corners = []
+        for plate in isoBoard.isoPlates:
+            points = plate[2]
+            if points:
+                all_corners.extend(points)
+
+        if all_corners:
+            top_point = min(all_corners, key=lambda p: p[1])
+            bottom_point = max(all_corners, key=lambda p: p[1])
+
+            # Create a transparent surface for light effect
+            light_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+            pygame.draw.polygon(light_surface, LIGHT, [light_source, top_point, bottom_point])
+
+            screen.blit(light_surface, (0, 0))
+
     else:
         board.draw_grid()                # Draw grid
         board.draw_board(screen)         # Draw plates
