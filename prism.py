@@ -1,19 +1,29 @@
-'''
-我来doc一下我的implementation
+"""
+Luminara Game
 
-plates：每一个小块块，represented by type + location + relative coordinate + color 
-board：一个大的container，里面有很多个plates，负责绘制所有的plates
-round：一个回合，包含一个board和一个target number，负责判断这个回合是否完成
+Plate: A single shape unit defined by:
+- type (polygon or circle)
+- location (grid coordinate)
+- relative coordinates (local shape points)
+- color (modifiable via UI)
 
+Board: A container for plates that:
+- manages rendering all plates on a grid
+- allows selection and dragging of individual plates
+- supports snapping to a defined grid layout
 
-gridLength gridHeight: 40, 30 
+Round (not yet fully implemented): Represents a game round, containing:
+- a `Board`
+- a target number or condition
+- logic to check for completion (e.g., goal state)
 
-'''
+Interface Features:
+- Grid Dimensions: 40x30 (with cell size = 15px)
+- Plate Color: Initially white; selectable via color buttons
+- Toggle View: Switch between 2D and isometric projection
+- Plate Dragging: Move plates by dragging the small black handle
+"""
 
-
-#plate color: 初始为白色，点击后选择颜色
-
-    
 
 import pygame 
 import sys
@@ -291,9 +301,6 @@ class IsoProjection:
     #     screen.blit(final_surface, blit_position)
 
 
-
-
-
 pygame.init()
 
 WIDTH, HEIGHT = 800, 600
@@ -401,7 +408,6 @@ while running:
     screen.blit(button_text, (toggle_button.x + 10, toggle_button.y + 10))
 
     pygame.display.flip()
-
 
 
 pygame.quit()
