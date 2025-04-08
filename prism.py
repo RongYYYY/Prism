@@ -208,7 +208,7 @@ class IsoProjection:
         width, height = screen.get_size()
         blended_surface = pygame.Surface((width, height), pygame.SRCALPHA)
 
-        # Track RGB sum and number of contributions
+        # Track RGB light sum and count of overlapping plates
         rgb_sum = numpy.zeros((width, height, 3), dtype=numpy.float32)
         count = numpy.zeros((width, height), dtype=numpy.uint8)
 
@@ -216,24 +216,81 @@ class IsoProjection:
             shape_surface = pygame.Surface((width, height), pygame.SRCALPHA)
             pygame.draw.polygon(shape_surface, plate[1], plate[2])
             shape_array = pygame.surfarray.pixels3d(shape_surface)
-            mask = pygame.surfarray.array_alpha(shape_surface)
+            alpha_mask = pygame.surfarray.array_alpha(shape_surface)
 
-            # Only blend pixels where the shape is present
-            active_pixels = mask > 0
-            rgb_sum[active_pixels] += shape_array[active_pixels]
-            count[active_pixels] += 1
+            active = alpha_mask > 0
+            rgb_sum[active] += shape_array[active]
+            count[active] += 1
 
-        # Avoid division by zero
-        count[count == 0] = 1
+        # Clamp max channel value per pixel to 255 (white light)
+        max_vals = rgb_sum.max(axis=2)
+        scale = numpy.ones_like(max_vals)
 
-        # Average the contributions
-        result_array = (rgb_sum / count[..., None])
-        numpy.clip(result_array, 0, 255, out=result_array)
-        result_array = result_array.astype(numpy.uint8)
+        # Scale only if a pixel’s RGB intensity would exceed white
+        overflow = max_vals > 255
+        scale[overflow] = 255.0 / max_vals[overflow]
+
+        # Apply per-pixel scaling to avoid washout, preserve color balance
+        for c in range(3):
+            rgb_sum[:, :, c] *= scale
+
+        # Final: clip, convert, blit
+        numpy.clip(rgb_sum, 0, 255, out=rgb_sum)
+        result_array = rgb_sum.astype(numpy.uint8)
 
         final_surface = pygame.surfarray.make_surface(result_array)
         final_surface.set_alpha(255)
         screen.blit(final_surface, blit_position)
+
+    # def draw_projection(self, screen, blit_position=(500, 0)):
+    #     width, height = screen.get_size()
+    #     blended_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+
+    #     # Track RGB sum and number of contributions
+    #     rgb_sum = numpy.zeros((width, height, 3), dtype=numpy.float32)
+    #     count = numpy.zeros((width, height), dtype=numpy.uint8)
+
+    #     for plate in self.isoPlates:
+    #         shape_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+    #         pygame.draw.polygon(shape_surface, plate[1], plate[2])
+    #         shape_array = pygame.surfarray.pixels3d(shape_surface)
+    #         mask = pygame.surfarray.array_alpha(shape_surface)
+
+    #         # Only blend pixels where the shape is present
+    #         active_pixels = mask > 0
+    #         rgb_sum[active_pixels] += shape_array[active_pixels]
+    #         count[active_pixels] += 1
+
+    #     # Avoid division by zero
+    #     count[count == 0] = 1
+
+    #     # Average the contributions
+    #     result_array = (rgb_sum / count[..., None])
+    #     numpy.clip(result_array, 0, 255, out=result_array)
+    #     result_array = result_array.astype(numpy.uint8)
+
+    #     final_surface = pygame.surfarray.make_surface(result_array)
+    #     final_surface.set_alpha(255)
+    #     screen.blit(final_surface, blit_position)
+    
+    # def draw_projection(self, screen, blit_position=(500, 0)):
+    #     width, height = screen.get_size()
+    #     blended_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+    #     blended_array = numpy.zeros((width, height, 3), dtype=numpy.uint16)
+
+    #     for plate in self.isoPlates:
+    #         shape_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+    #         pygame.draw.polygon(shape_surface, plate[1], plate[2])
+    #         shape_array = pygame.surfarray.pixels3d(shape_surface)
+    #         blended_array += shape_array
+
+    #     numpy.clip(blended_array, 0, 255, out=blended_array)
+    #     final_surface = pygame.surfarray.make_surface(blended_array.astype(numpy.uint8))
+    #     final_surface.set_alpha(255)
+        
+    #     screen.blit(final_surface, blit_position)
+
+
 
 
 
@@ -265,7 +322,7 @@ def draw_color_buttons():
 
 board = Board()
 plate1 = Plates(1, GRAY, (0, 0), [(0, 0), (10, 0), (10, 10), (0, 10)])
-plate2 = Plates(1, GRAY, (20, 20), [(0, 0), (10, 0), (10, 10), (0, 10)])
+plate2 = Plates(1, GRAY, (20, 20), [(0, 0), (10, 0), (0, 10)])
 plate3 = Plates(2, GRAY, (15, 15), [(5, 5)])
 board.add_plate(plate1)
 board.add_plate(plate2)
@@ -329,7 +386,7 @@ while running:
 
     if show_isometric:
         isoBoard = IsoBoard(board.plates)
-        isoProjection = IsoProjection(board.plates, scale=1.7, offset=(10, 80))
+        isoProjection = IsoProjection(board.plates, scale=1.8, offset=(10, 80))
         isoBoard.draw_board(screen)      # Draw plates
         isoBoard.draw_grid()             # Draw grid on top
         isoProjection.draw_projection(screen, blit_position=(400, 0))
