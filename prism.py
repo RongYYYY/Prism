@@ -1,19 +1,29 @@
-'''
-我来doc一下我的implementation
+"""
+Luminara Game
 
-plates：每一个小块块，represented by type + location + relative coordinate + color 
-board：一个大的container，里面有很多个plates，负责绘制所有的plates
-round：一个回合，包含一个board和一个target number，负责判断这个回合是否完成
+Plate: A single shape unit defined by:
+- type (polygon or circle)
+- location (grid coordinate)
+- relative coordinates (local shape points)
+- color (modifiable via UI)
 
+Board: A container for plates that:
+- manages rendering all plates on a grid
+- allows selection and dragging of individual plates
+- supports snapping to a defined grid layout
 
-gridLength gridHeight: 40, 30 
+Round (not yet fully implemented): Represents a game round, containing:
+- a `Board`
+- a target number or condition
+- logic to check for completion (e.g., goal state)
 
-'''
+Interface Features:
+- Grid Dimensions: 40x30 (with cell size = 15px)
+- Plate Color: Initially white; selectable via color buttons
+- Toggle View: Switch between 2D and isometric projection
+- Plate Dragging: Move plates by dragging the small black handle
+"""
 
-
-#plate color: 初始为白色，点击后选择颜色
-
-    
 
 import pygame 
 import sys
@@ -291,9 +301,6 @@ class IsoProjection:
     #     screen.blit(final_surface, blit_position)
 
 
-
-
-
 pygame.init()
 
 WIDTH, HEIGHT = 800, 600
@@ -321,12 +328,56 @@ def draw_color_buttons():
         pygame.draw.rect(screen, color, rect)
 
 board = Board()
-plate1 = Plates(1, GRAY, (0, 0), [(0, 0), (10, 0), (10, 10), (0, 10)])
-plate2 = Plates(1, GRAY, (20, 20), [(0, 0), (10, 0), (0, 10)])
-plate3 = Plates(2, GRAY, (15, 15), [(5, 5)])
+
+
+# LEVEL 1: MOON
+# plate1 = Plates(2, GRAY, (20, 20), [(7, 7)])
+# plate2 = Plates(2, GRAY, (15, 15), [(10, 10)])
+# board.add_plate(plate1)
+# board.add_plate(plate2)
+
+# LEVEL 2: CLOUD
+# plate1 = Plates(1, GRAY, (0, 0), [(0, 0), (12, 0), (12, 12), (0, 12)])
+# plate2 = Plates(2, GRAY, (20, 20), [(3, 3)])
+# plate3 = Plates(2, GRAY, (15, 15), [(5, 5)])
+# board.add_plate(plate1)
+# board.add_plate(plate2)
+# board.add_plate(plate3)
+
+# LEVEL 3: HEART
+# plate1 = Plates(1, GRAY, (10, 10), [(0, 0), (8, 8), (16, 0), (8, -8)])
+# plate2 = Plates(2, GRAY, (20, 20), [(4*2**0.5, 4*2**0.5)])
+# plate3 = Plates(2, GRAY, (15, 15), [(4*2**0.5, 4*2**0.5)])
+# board.add_plate(plate1)
+# board.add_plate(plate2)
+# board.add_plate(plate3)
+
+# LEVEL 4: TARGET
+# plate1 = Plates(2, GRAY, (10, 10), [(7, 7)])
+# plate2 = Plates(2, GRAY, (20, 20), [(4, 4)])
+# plate3 = Plates(2, GRAY, (15, 15), [(10, 10)])
+# board.add_plate(plate1)
+# board.add_plate(plate2)
+# board.add_plate(plate3)
+
+# LEVEL 5: YOUTUBE
+# plate1 = Plates(1, GRAY, (5, 5), [(0, 0), (16, 0), (16, 10), (0, 10)])
+# plate2 = Plates(1, GRAY, (20, 15), [(0, 0), (5, 3), (0, 6)])
+# plate3 = Plates(1, GRAY, (10, 20), [(0, 0), (5, 3), (0, 6)])
+# board.add_plate(plate1)
+# board.add_plate(plate2)
+# board.add_plate(plate3)
+
+# LEVEL 6: MAP
+plate1 = Plates(1, GRAY, (17, 5), [(0, 0), (8, 8), (16, 0)])
+plate2 = Plates(2, GRAY, (20, 20), [(10, 10)])
+plate3 = Plates(2, GRAY, (7, 7), [(4*2**0.5, 4*2**0.5)])
+plate4 = Plates(2, GRAY, (8, 15), [(4*2**0.5, 4*2**0.5)])
 board.add_plate(plate1)
 board.add_plate(plate2)
 board.add_plate(plate3)
+board.add_plate(plate4)
+
 
 selected_plate = None
 
@@ -390,6 +441,27 @@ while running:
         isoBoard.draw_board(screen)      # Draw plates
         isoBoard.draw_grid()             # Draw grid on top
         isoProjection.draw_projection(screen, blit_position=(400, 0))
+
+        # Light visualization
+        LIGHT = (255, 255, 100, 80)
+        light_source = (80, 300)
+
+        all_corners = []
+        for plate in isoBoard.isoPlates:
+            points = plate[2]
+            if points:
+                all_corners.extend(points)
+
+        if all_corners:
+            top_point = min(all_corners, key=lambda p: p[1])
+            bottom_point = max(all_corners, key=lambda p: p[1])
+
+            # Create a transparent surface for light effect
+            light_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+            pygame.draw.polygon(light_surface, LIGHT, [light_source, top_point, bottom_point])
+
+            screen.blit(light_surface, (0, 0))
+
     else:
         board.draw_grid()                # Draw grid
         board.draw_board(screen)         # Draw plates
@@ -401,7 +473,6 @@ while running:
     screen.blit(button_text, (toggle_button.x + 10, toggle_button.y + 10))
 
     pygame.display.flip()
-
 
 
 pygame.quit()
