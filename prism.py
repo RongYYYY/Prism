@@ -110,7 +110,7 @@ class IsoBoard:
     def compute_iso_plates(plates, scale=1, offset=(0, 0)):
         """Shared method to generate isometric plate data"""
         def conversion(x, y):
-            ex = scale * (x + 5 * x) + offset[0]
+            ex = scale * (x + 4.5 * x) + offset[0]
             ey = scale * (y + 5 * y + 2 * x) + offset[1]
             return (ex, ey)
 
@@ -153,20 +153,34 @@ class IsoBoard:
     def draw_board(self, screen, blit_position=(0, 0)):
         width, height = screen.get_size()
         blended_surface = pygame.Surface((width, height), pygame.SRCALPHA)
-        blended_array = numpy.zeros((width, height, 3), dtype=numpy.uint16)
+
+        # Track RGB sum and number of contributions
+        rgb_sum = numpy.zeros((width, height, 3), dtype=numpy.float32)
+        count = numpy.zeros((width, height), dtype=numpy.uint8)
 
         for plate in self.isoPlates:
             shape_surface = pygame.Surface((width, height), pygame.SRCALPHA)
             pygame.draw.polygon(shape_surface, plate[1], plate[2])
             shape_array = pygame.surfarray.pixels3d(shape_surface)
-            blended_array += shape_array
+            mask = pygame.surfarray.array_alpha(shape_surface)
 
-        numpy.clip(blended_array, 0, 255, out=blended_array)
-        final_surface = pygame.surfarray.make_surface(blended_array.astype(numpy.uint8))
+            # Only update pixels where the alpha is non-zero
+            active_pixels = mask > 0
+            rgb_sum[active_pixels] += shape_array[active_pixels]
+            count[active_pixels] += 1
+
+        # Prevent division by zero
+        count[count == 0] = 1
+
+        # Average the contributions for smoother color blending
+        result_array = (rgb_sum / count[..., None])
+        numpy.clip(result_array, 0, 255, out=result_array)
+        result_array = result_array.astype(numpy.uint8)
+
+        final_surface = pygame.surfarray.make_surface(result_array)
         final_surface.set_alpha(255)
-        
-        # Only draw to the screen at the specified position
         screen.blit(final_surface, blit_position)
+
 
     def draw_grid(self):
         for x in range(0, 41, 5):
@@ -180,7 +194,7 @@ class IsoBoard:
 
     @staticmethod
     def compute_conversion(x, y, scale, offset):
-        ex = scale * (x + 5 * x) + offset[0]
+        ex = scale * (x + 4.5 * x) + offset[0]
         ey = scale * (y + 5 * y + 2 * x) + offset[1]
         return (ex, ey)
 
@@ -193,116 +207,34 @@ class IsoProjection:
     def draw_projection(self, screen, blit_position=(500, 0)):
         width, height = screen.get_size()
         blended_surface = pygame.Surface((width, height), pygame.SRCALPHA)
-        blended_array = numpy.zeros((width, height, 3), dtype=numpy.uint16)
+
+        # Track RGB sum and number of contributions
+        rgb_sum = numpy.zeros((width, height, 3), dtype=numpy.float32)
+        count = numpy.zeros((width, height), dtype=numpy.uint8)
 
         for plate in self.isoPlates:
             shape_surface = pygame.Surface((width, height), pygame.SRCALPHA)
             pygame.draw.polygon(shape_surface, plate[1], plate[2])
             shape_array = pygame.surfarray.pixels3d(shape_surface)
-            blended_array += shape_array
+            mask = pygame.surfarray.array_alpha(shape_surface)
 
-        numpy.clip(blended_array, 0, 255, out=blended_array)
-        final_surface = pygame.surfarray.make_surface(blended_array.astype(numpy.uint8))
+            # Only blend pixels where the shape is present
+            active_pixels = mask > 0
+            rgb_sum[active_pixels] += shape_array[active_pixels]
+            count[active_pixels] += 1
+
+        # Avoid division by zero
+        count[count == 0] = 1
+
+        # Average the contributions
+        result_array = (rgb_sum / count[..., None])
+        numpy.clip(result_array, 0, 255, out=result_array)
+        result_array = result_array.astype(numpy.uint8)
+
+        final_surface = pygame.surfarray.make_surface(result_array)
         final_surface.set_alpha(255)
-        
         screen.blit(final_surface, blit_position)
 
-
-# class IsoBoard: 
-#     startX = 160
-#     startY = 180
-#     def __init__(self, plates):
-#         self.plates = plates
-#         self.isoPlates = [] 
-#         # (type, color, locations)
-#         # (type, color, locations )
-
-#         for plate in self.plates:
-#             if plate.plate_type == 1:
-#                 isoP = []
-#                 for (x, y) in plate.plate_xys:
-#                     ex = plate.plate_location[0] + x
-#                     ey = plate.plate_location[1] + y
-#                     isoP.append(IsoBoard.conversion(ex, ey))
-#                 self.isoPlates.append((1, plate.plate_color, isoP))
-#             elif plate.plate_type == 2:
-#                 exy = (plate.plate_location[0], plate.plate_location[1])
-#                 #radiusx = (plate.plate_xys[0][0] * 10, plate.plate_xys[0][0] * 10)
-#                 # self.isoPlates.append((2, plate.plate_color, [exy, radiusx]))
-
-#                 radius = plate.plate_xys[0][0]  # Using x radius (assumed uniform)
-
-#                 # Define the parallelogram around the circle
-#                 # Matches your previous pattern: A, B, C, D
-#                 A = IsoBoard.conversion(exy[0] - radius, exy[1] - radius)
-#                 B = IsoBoard.conversion(exy[0] + radius, exy[1] - radius)
-#                 C = IsoBoard.conversion(exy[0] - radius, exy[1] + radius)
-#                 D = IsoBoard.conversion(exy[0] + radius, exy[1] + radius)
-
-#                 def bilinear_map(u, v, A, B, C, D):
-#                     x = (1 - u) * (1 - v) * A[0] + u * (1 - v) * B[0] + (1 - u) * v * C[0] + u * v * D[0]
-#                     y = (1 - u) * (1 - v) * A[1] + u * (1 - v) * B[1] + (1 - u) * v * C[1] + u * v * D[1]
-#                     return (x, y)
-
-#                 # Generate circle points in normalized space
-#                 points = []
-#                 resolution = 60
-#                 for i in range(resolution):
-#                     angle = 2 * math.pi * i / resolution
-#                     u = 0.5 + 0.5 * math.cos(angle)
-#                     v = 0.5 + 0.5 * math.sin(angle)
-#                     point = bilinear_map(u, v, A, B, C, D)
-#                     points.append(point)
-#                 self.isoPlates.append((2, plate.plate_color, points))
-
-#                 print(points)
-                
-
-    def draw_board(self, screen):
-        width, height = screen.get_size()
-        
-        # Create blank surface and NumPy array for blending
-        blended_surface = pygame.Surface((width, height), pygame.SRCALPHA)
-        blended_array = numpy.zeros((width, height, 3), dtype=numpy.uint16)  # Use 16-bit to prevent overflow
-
-        for plate in self.isoPlates:
-            # Draw each plate on a temp surface
-            shape_surface = pygame.Surface((width, height), pygame.SRCALPHA)
-            pygame.draw.polygon(shape_surface, plate[1], plate[2])
-
-            # Convert surface to NumPy array (RGB only)
-            shape_array = pygame.surfarray.pixels3d(shape_surface)
-
-            # Add RGB values to accumulator (clip later)
-            blended_array += shape_array
-
-        # Clip values to max 255 and convert to 8-bit
-        numpy.clip(blended_array, 0, 255, out=blended_array)
-        blended_array = blended_array.astype(numpy.uint8)
-
-        # Copy final RGB to surface
-        final_surface = pygame.surfarray.make_surface(blended_array)
-
-        # Add alpha channel (optional: you can skip if full opaque)
-        final_surface.set_alpha(255)
-        screen.blit(final_surface, (0, 0))
-
-
-            # elif plate[0] == 2:
-            #     pygame.draw.ellipse(screen, plate[1], (plate[2][0][0], plate[2][0][1], plate[2][1][0], plate[2][1][1]))
-                
-
-    def draw_grid(self):
-        for x in range(0, 41, 5):
-            pygame.draw.line(screen, LIGHT_GRID, (IsoBoard.conversion(x, 0)), (IsoBoard.conversion(x, 30)), 1)
-        for y in range(0, 31, 5):
-            pygame.draw.line(screen, LIGHT_GRID, (IsoBoard.conversion(0, y)), (IsoBoard.conversion(40, y)), 1)
-
-    @staticmethod
-    def conversion(x, y):
-        ex = x + 5 * x + IsoBoard.startX
-        ey = y + 5 * y + 2 * x + IsoBoard.startY
-        return (ex, ey)
 
 
 pygame.init()
@@ -397,10 +329,10 @@ while running:
 
     if show_isometric:
         isoBoard = IsoBoard(board.plates)
-        isoProjection = IsoProjection(board.plates, scale=2, offset=(-100, 50))
+        isoProjection = IsoProjection(board.plates, scale=1.7, offset=(10, 80))
         isoBoard.draw_board(screen)      # Draw plates
         isoBoard.draw_grid()             # Draw grid on top
-        isoProjection.draw_projection(screen, blit_position=(420, 0))
+        isoProjection.draw_projection(screen, blit_position=(400, 0))
     else:
         board.draw_grid()                # Draw grid
         board.draw_board(screen)         # Draw plates
