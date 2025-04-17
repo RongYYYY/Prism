@@ -12,15 +12,18 @@ Board: A container for plates that:
 - allows selection and dragging of individual plates
 - supports snapping to a defined grid layout
 
-Round (not yet fully implemented): Represents a game round, containing:
+Level: Represents a game level:
+- defines which plates to load onto the board
+
+(TBA) Round: Represents a game round, containing:
 - a `Board`
 - a target number or condition
 - logic to check for completion (e.g., goal state)
 
 Interface Features:
 - Grid Dimensions: 40x30 (with cell size = 15px)
-- Plate Color: Initially white; selectable via color buttons
-- Toggle View: Switch between 2D and isometric projection
+- Plate Color: White by default, change via color buttons
+- Toggle View: Switch between 2D and isometric projection using SPACE
 - Plate Dragging: Move plates by dragging the small black handle
 """
 
@@ -79,7 +82,7 @@ class Board:
         self.plates = []
         
         self.boardStartX = 100
-        self.boardStartY = 75
+        self.boardStartY = 60
         self.width = 600
         self.height = 450
         self.cellWidth = 15
@@ -252,75 +255,44 @@ class IsoProjection:
         final_surface.set_alpha(255)
         screen.blit(final_surface, blit_position)
 
-    # def draw_projection(self, screen, blit_position=(500, 0)):
-    #     width, height = screen.get_size()
-    #     blended_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+class Level:
+    def __init__(self, level_id, plate_definitions):
+        self.level_id = level_id
+        self.plate_definitions = plate_definitions
 
-    #     # Track RGB sum and number of contributions
-    #     rgb_sum = numpy.zeros((width, height, 3), dtype=numpy.float32)
-    #     count = numpy.zeros((width, height), dtype=numpy.uint8)
-
-    #     for plate in self.isoPlates:
-    #         shape_surface = pygame.Surface((width, height), pygame.SRCALPHA)
-    #         pygame.draw.polygon(shape_surface, plate[1], plate[2])
-    #         shape_array = pygame.surfarray.pixels3d(shape_surface)
-    #         mask = pygame.surfarray.array_alpha(shape_surface)
-
-    #         # Only blend pixels where the shape is present
-    #         active_pixels = mask > 0
-    #         rgb_sum[active_pixels] += shape_array[active_pixels]
-    #         count[active_pixels] += 1
-
-    #     # Avoid division by zero
-    #     count[count == 0] = 1
-
-    #     # Average the contributions
-    #     result_array = (rgb_sum / count[..., None])
-    #     numpy.clip(result_array, 0, 255, out=result_array)
-    #     result_array = result_array.astype(numpy.uint8)
-
-    #     final_surface = pygame.surfarray.make_surface(result_array)
-    #     final_surface.set_alpha(255)
-    #     screen.blit(final_surface, blit_position)
-    
-    # def draw_projection(self, screen, blit_position=(500, 0)):
-    #     width, height = screen.get_size()
-    #     blended_surface = pygame.Surface((width, height), pygame.SRCALPHA)
-    #     blended_array = numpy.zeros((width, height, 3), dtype=numpy.uint16)
-
-    #     for plate in self.isoPlates:
-    #         shape_surface = pygame.Surface((width, height), pygame.SRCALPHA)
-    #         pygame.draw.polygon(shape_surface, plate[1], plate[2])
-    #         shape_array = pygame.surfarray.pixels3d(shape_surface)
-    #         blended_array += shape_array
-
-    #     numpy.clip(blended_array, 0, 255, out=blended_array)
-    #     final_surface = pygame.surfarray.make_surface(blended_array.astype(numpy.uint8))
-    #     final_surface.set_alpha(255)
-        
-    #     screen.blit(final_surface, blit_position)
+    def load(self, board):
+        # Clear existing plates
+        board.plates.clear()
+        # Instantiate Plates per definition
+        for spec in self.plate_definitions:
+            plate = Plates(
+                spec['type'],
+                spec.get('color', GRAY),
+                tuple(spec['location']),
+                spec['xys']
+            )
+            board.add_plate(plate)
 
 
+# Initialize Pygame and constants
 pygame.init()
-
 WIDTH, HEIGHT = 800, 600
-
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Luminara: Draw Shape Demo")
+pygame.display.set_caption("Luminara Demo")
+FONT = pygame.font.SysFont("couriernew", 24)
 
-# Semi-transparent Colors
+# Semi-transparent Color Palatte
 LIGHT_GRID = (230, 230, 230, 255)
 WHITE  = (255, 255, 255, 255)
 GRAY   = (220, 220, 220, 160)
-REDD    = (255, 0, 0, 160)
-GREEND  = (0, 255, 0, 160)
-BLUED   = (0, 0, 255, 160)
+REDD    = (239, 72, 60, 160)
+GREEND  = (25, 115, 23, 160)
+BLUED   = (25, 115, 192, 160)
 
-# Draw Color Selection Buttons
+# Color Selection Buttons
 color_buttons = [(REDD, pygame.Rect(720, 150, 50, 50)),
-                  (GREEND, pygame.Rect(720, 250, 50, 50)),
-                  (BLUED, pygame.Rect(720, 350, 50, 50))]
-
+                 (GREEND, pygame.Rect(720, 250, 50, 50)),
+                 (BLUED, pygame.Rect(720, 350, 50, 50))]
 selected_color = None
 
 def draw_color_buttons():
@@ -330,60 +302,47 @@ def draw_color_buttons():
 board = Board()
 
 
-# LEVEL 1: MOON
-# plate1 = Plates(2, GRAY, (20, 20), [(7, 7)])
-# plate2 = Plates(2, GRAY, (15, 15), [(10, 10)])
-# board.add_plate(plate1)
-# board.add_plate(plate2)
+# Define level data
+level_data = {
+    1: [ # Moon
+        {'type':2, 'color':GRAY, 'location':(20,20), 'xys':[(7,7)]},
+        {'type':2, 'color':GRAY, 'location':(15,15), 'xys':[(10,10)]}
+    ],
+    2: [ # Cloud
+        {'type':1, 'color':GRAY, 'location':(5,12),   'xys':[(0,0),(12,0),(12,12),(0,12)]},
+        {'type':2, 'color':GRAY, 'location':(20,10), 'xys':[(3,3)]},
+        {'type':2, 'color':GRAY, 'location':(25,15), 'xys':[(5,5)]}
+    ],
+    3: [ # Heart
+        {'type':1, 'color':GRAY, 'location':(10,10),'xys':[(0,0),(8,8),(16,0),(8,-8)]},
+        {'type':2, 'color':GRAY, 'location':(20,20),'xys':[(4*2**0.5,4*2**0.5)]},
+        {'type':2, 'color':GRAY, 'location':(15,15),'xys':[(4*2**0.5,4*2**0.5)]}
+    ],
+    4: [ # Target
+        {'type':2, 'color':GRAY, 'location':(30,20),'xys':[(3,3)]},
+        {'type':2, 'color':GRAY, 'location':(10,10),'xys':[(8,8)]},
+        {'type':2, 'color':GRAY, 'location':(20,15),'xys':[(10,10)]}
+    ],
+    5: [ # YouTube
+        {'type':1, 'color':GRAY, 'location':(5,5),  'xys':[(0,0),(16,0),(16,10),(0,10)]},
+        {'type':1, 'color':GRAY, 'location':(20,15),'xys':[(0,0),(5,3),(0,6)]},
+        {'type':1, 'color':GRAY, 'location':(10,20),'xys':[(0,0),(5,3),(0,6)]}
+    ],
+    6: [ # Map
+        {'type':1, 'color':GRAY, 'location':(17,5), 'xys':[(0,0),(8,8),(16,0)]},
+        {'type':2, 'color':GRAY, 'location':(20,19),'xys':[(10,10)]},
+        {'type':2, 'color':GRAY, 'location':(7,7),  'xys':[(4*2**0.5,4*2**0.5)]},
+        {'type':2, 'color':GRAY, 'location':(8,15), 'xys':[(4*2**0.5,4*2**0.5)]}
+    ]
+}
 
-# LEVEL 2: CLOUD
-# plate1 = Plates(1, GRAY, (0, 0), [(0, 0), (12, 0), (12, 12), (0, 12)])
-# plate2 = Plates(2, GRAY, (20, 20), [(3, 3)])
-# plate3 = Plates(2, GRAY, (15, 15), [(5, 5)])
-# board.add_plate(plate1)
-# board.add_plate(plate2)
-# board.add_plate(plate3)
-
-# LEVEL 3: HEART
-# plate1 = Plates(1, GRAY, (10, 10), [(0, 0), (8, 8), (16, 0), (8, -8)])
-# plate2 = Plates(2, GRAY, (20, 20), [(4*2**0.5, 4*2**0.5)])
-# plate3 = Plates(2, GRAY, (15, 15), [(4*2**0.5, 4*2**0.5)])
-# board.add_plate(plate1)
-# board.add_plate(plate2)
-# board.add_plate(plate3)
-
-# LEVEL 4: TARGET
-# plate1 = Plates(2, GRAY, (10, 10), [(7, 7)])
-# plate2 = Plates(2, GRAY, (20, 20), [(4, 4)])
-# plate3 = Plates(2, GRAY, (15, 15), [(10, 10)])
-# board.add_plate(plate1)
-# board.add_plate(plate2)
-# board.add_plate(plate3)
-
-# LEVEL 5: YOUTUBE
-# plate1 = Plates(1, GRAY, (5, 5), [(0, 0), (16, 0), (16, 10), (0, 10)])
-# plate2 = Plates(1, GRAY, (20, 15), [(0, 0), (5, 3), (0, 6)])
-# plate3 = Plates(1, GRAY, (10, 20), [(0, 0), (5, 3), (0, 6)])
-# board.add_plate(plate1)
-# board.add_plate(plate2)
-# board.add_plate(plate3)
-
-# LEVEL 6: MAP
-plate1 = Plates(1, GRAY, (17, 5), [(0, 0), (8, 8), (16, 0)])
-plate2 = Plates(2, GRAY, (20, 20), [(10, 10)])
-plate3 = Plates(2, GRAY, (7, 7), [(4*2**0.5, 4*2**0.5)])
-plate4 = Plates(2, GRAY, (8, 15), [(4*2**0.5, 4*2**0.5)])
-board.add_plate(plate1)
-board.add_plate(plate2)
-board.add_plate(plate3)
-board.add_plate(plate4)
+# Load the desired level
+current_level = 2
+level = Level(current_level, level_data[current_level])
+level.load(board)
 
 
 selected_plate = None
-
-# New button for toggling views
-toggle_button = pygame.Rect(30, 30, 120, 40)
-FONT = pygame.font.SysFont(None, 24)
 
 # Start in 2D view
 show_isometric = False
@@ -394,12 +353,17 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            # Check if a color button is clicked
-            if toggle_button.collidepoint(event.pos):
+        
+        # Change to press space bar to toggle view
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
                 show_isometric = not show_isometric
 
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            # if toggle_button.collidepoint(event.pos):
+            #     show_isometric = not show_isometric
+
+            # Check if a color button is clicked
             for color, rect in color_buttons:
                 if rect.collidepoint(event.pos):
                     selected_color = color
@@ -432,8 +396,6 @@ while running:
             selected_plate.plate_location = (x, y)
             selected_plate.xy_to_coordinates()
 
-    # Draw toggle button
-    screen.fill(WHITE)
 
     if show_isometric:
         isoBoard = IsoBoard(board.plates)
@@ -463,14 +425,15 @@ while running:
             screen.blit(light_surface, (0, 0))
 
     else:
-        board.draw_grid()                # Draw grid
-        board.draw_board(screen)         # Draw plates
-        draw_color_buttons()            # Optional color buttons
+        screen.fill(WHITE)
+        board.draw_grid()           # Draw grid
+        board.draw_board(screen)    # Draw plates
+        draw_color_buttons()        # Optional color buttons
+        
+        # Draw text instruction at bottom of screen
+        instruction_text = FONT.render("Press SPACE to toggle view", True, (0, 0, 0))
+        screen.blit(instruction_text, (WIDTH // 2 - instruction_text.get_width() // 2, HEIGHT - 60))
 
-    # Draw toggle button LAST so it's always visible
-    pygame.draw.rect(screen, (180, 180, 180), toggle_button)
-    button_text = FONT.render("Toggle View", True, (0, 0, 0))
-    screen.blit(button_text, (toggle_button.x + 10, toggle_button.y + 10))
 
     pygame.display.flip()
 
