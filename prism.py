@@ -79,7 +79,7 @@ class Board:
         self.plates = []
         
         self.boardStartX = 100
-        self.boardStartY = 75
+        self.boardStartY = 60
         self.width = 600
         self.height = 450
         self.cellWidth = 15
@@ -306,20 +306,27 @@ pygame.init()
 WIDTH, HEIGHT = 800, 600
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Luminara: Draw Shape Demo")
+pygame.display.set_caption("Luminara Demo")
+
+FONT = pygame.font.SysFont("couriernew", 24)
 
 # Semi-transparent Colors
 LIGHT_GRID = (230, 230, 230, 255)
 WHITE  = (255, 255, 255, 255)
 GRAY   = (220, 220, 220, 160)
-REDD    = (255, 0, 0, 160)
-GREEND  = (0, 255, 0, 160)
-BLUED   = (0, 0, 255, 160)
+# REDD    = (255, 0, 0, 160)
+# GREEND  = (0, 255, 0, 160)
+# BLUED   = (0, 0, 255, 160)
+
+# New color palatte
+REDD    = (239, 72, 60, 160)
+GREEND  = (25, 115, 23, 160)
+BLUED   = (25, 115, 192, 160)
 
 # Draw Color Selection Buttons
 color_buttons = [(REDD, pygame.Rect(720, 150, 50, 50)),
-                  (GREEND, pygame.Rect(720, 250, 50, 50)),
-                  (BLUED, pygame.Rect(720, 350, 50, 50))]
+                 (GREEND, pygame.Rect(720, 250, 50, 50)),
+                 (BLUED, pygame.Rect(720, 350, 50, 50))]
 
 selected_color = None
 
@@ -370,7 +377,7 @@ board = Board()
 
 # LEVEL 6: MAP
 plate1 = Plates(1, GRAY, (17, 5), [(0, 0), (8, 8), (16, 0)])
-plate2 = Plates(2, GRAY, (20, 20), [(10, 10)])
+plate2 = Plates(2, GRAY, (20, 19), [(10, 10)])
 plate3 = Plates(2, GRAY, (7, 7), [(4*2**0.5, 4*2**0.5)])
 plate4 = Plates(2, GRAY, (8, 15), [(4*2**0.5, 4*2**0.5)])
 board.add_plate(plate1)
@@ -381,9 +388,9 @@ board.add_plate(plate4)
 
 selected_plate = None
 
-# New button for toggling views
-toggle_button = pygame.Rect(30, 30, 120, 40)
-FONT = pygame.font.SysFont(None, 24)
+# Button for toggling views
+# toggle_button = pygame.Rect(30, 30, 120, 40)
+# FONT = pygame.font.SysFont(None, 24)
 
 # Start in 2D view
 show_isometric = False
@@ -394,12 +401,17 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            # Check if a color button is clicked
-            if toggle_button.collidepoint(event.pos):
+        
+        # Change to press space bar to toggle view
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
                 show_isometric = not show_isometric
 
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            # if toggle_button.collidepoint(event.pos):
+            #     show_isometric = not show_isometric
+
+            # Check if a color button is clicked
             for color, rect in color_buttons:
                 if rect.collidepoint(event.pos):
                     selected_color = color
@@ -432,8 +444,6 @@ while running:
             selected_plate.plate_location = (x, y)
             selected_plate.xy_to_coordinates()
 
-    # Draw toggle button
-    screen.fill(WHITE)
 
     if show_isometric:
         isoBoard = IsoBoard(board.plates)
@@ -463,14 +473,20 @@ while running:
             screen.blit(light_surface, (0, 0))
 
     else:
-        board.draw_grid()                # Draw grid
-        board.draw_board(screen)         # Draw plates
-        draw_color_buttons()            # Optional color buttons
+        screen.fill(WHITE)
+        board.draw_grid()           # Draw grid
+        board.draw_board(screen)    # Draw plates
+        draw_color_buttons()        # Optional color buttons
+        
+        # Draw text instruction at bottom of screen
+        instruction_text = FONT.render("Press SPACE to toggle view", True, (0, 0, 0))
+        screen.blit(instruction_text, (WIDTH // 2 - instruction_text.get_width() // 2, HEIGHT - 60))
+
 
     # Draw toggle button LAST so it's always visible
-    pygame.draw.rect(screen, (180, 180, 180), toggle_button)
-    button_text = FONT.render("Toggle View", True, (0, 0, 0))
-    screen.blit(button_text, (toggle_button.x + 10, toggle_button.y + 10))
+    # pygame.draw.rect(screen, (180, 180, 180), toggle_button)
+    # button_text = FONT.render("Toggle View", True, (0, 0, 0))
+    # screen.blit(button_text, (toggle_button.x + 10, toggle_button.y + 10))
 
     pygame.display.flip()
 
