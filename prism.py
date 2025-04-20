@@ -282,12 +282,37 @@ pygame.display.set_caption("Luminara Demo")
 FONT = pygame.font.SysFont("couriernew", 24)
 
 # Semi-transparent Color Palatte
+# LIGHT_GRID = (230, 230, 230, 255)
+# WHITE  = (255, 255, 255, 255)
+# GRAY   = (220, 220, 220, 160)
+# REDD    = (239, 72, 60, 160)
+# GREEND  = (25, 115, 23, 160)
+# BLUED   = (25, 115, 192, 160)
+
 LIGHT_GRID = (230, 230, 230, 255)
-WHITE  = (255, 255, 255, 255)
-GRAY   = (220, 220, 220, 160)
+# WHITE  = (255, 255, 255, 255)
+GRAY   = (100, 100, 100, 160)
 REDD    = (239, 72, 60, 160)
 GREEND  = (25, 115, 23, 160)
 BLUED   = (25, 115, 192, 160)
+
+# get whtie color
+def additive_blend(colors):
+    r, g, b = 0, 0, 0
+
+    for cr, cg, cb, ca in colors:
+        alpha = ca / 255.0
+        r += cr * alpha
+        g += cg * alpha
+        b += cb * alpha
+
+    # Clamp to 255 max
+    r = min(int(r), 255)
+    g = min(int(g), 255)
+    b = min(int(b), 255)
+    return (r, g, b, 255)
+
+WHITE  = (additive_blend([REDD, GREEND, BLUED]))
 
 # Color Selection Buttons
 color_buttons = [(REDD, pygame.Rect(720, 150, 50, 50)),
@@ -337,7 +362,7 @@ level_data = {
 }
 
 # Load the desired level
-current_level = 2
+current_level = 5
 level = Level(current_level, level_data[current_level])
 level.load(board)
 
