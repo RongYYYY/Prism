@@ -256,9 +256,80 @@ class IsoProjection:
         screen.blit(final_surface, blit_position)
 
 class Level:
-    def __init__(self, level_id, plate_definitions):
+    # Define level data
+    GRAY   = (100, 100, 100, 160)
+    REDD    = (239, 72, 60, 160)
+    GREEND  = (25, 115, 23, 160)
+    BLUED   = (25, 115, 192, 160)
+    level_answer = {
+        1: [
+            [(0, 0), GREEND, [(7, 7)]],
+            [(-3, 0), BLUED, [(10, 10)]]
+        ],
+        2: [
+            [(0, 0), BLUED, [(0, 0), (12, 0), (12, 12), (0, 12)]],
+            [(3, 12), REDD, [(3, 3)]],
+            [(7, 12), REDD, [(5, 5)]]
+        ],
+        3: [
+            [(0, 0), REDD, [(0, 0), (8, 8), (16, 0), (8, -8)]],
+            [(4, -4), REDD, [(5.656854249492381, 5.656854249492381)]],
+            [(12, -4), REDD, [(5.656854249492381, 5.656854249492381)]]
+        ],
+        4: [
+            [(0, 0), BLUED, [(4, 4)]],
+            [(0, 0), REDD, [(7, 7)]],
+            [(0, 0), GREEND, [(10, 10)]]
+        ],
+        5: [
+            [(0, 0), REDD, [(0, 0), (13, 0), (13, 10), (0, 10)]],
+            [(4, 2), GREEND, [(0, 0), (5, 3), (0, 6)]],
+            [(4, 2), BLUED, [(0, 0), (5, 3), (0, 6)]]
+        ],
+        6: [
+            [(0, 0), BLUED, [(10, 10)]],
+            [(-8, 6), BLUED, [(0, 0), (8, 8), (16, 0)]],
+            [(0, 0), REDD, [(5.656854249492381, 5.656854249492381)]],
+            [(0, 0), GREEND, [(5.656854249492381, 5.656854249492381)]]
+        ]
+    }
+
+    level_data = {
+        1: [ # Moon
+            {'type':2, 'color':GRAY, 'location':(20,20), 'xys':[(7,7)]},
+            {'type':2, 'color':GRAY, 'location':(15,15), 'xys':[(10,10)]}
+        ],
+        2: [ # Cloud
+            {'type':1, 'color':GRAY, 'location':(5,12),   'xys':[(0,0),(12,0),(12,12),(0,12)]},
+            {'type':2, 'color':GRAY, 'location':(20,10), 'xys':[(3,3)]},
+            {'type':2, 'color':GRAY, 'location':(25,15), 'xys':[(5,5)]}
+        ],
+        3: [ # Heart
+            {'type':1, 'color':GRAY, 'location':(10,10),'xys':[(0,0),(8,8),(16,0),(8,-8)]},
+            {'type':2, 'color':GRAY, 'location':(20,20),'xys':[(4*2**0.5,4*2**0.5)]},
+            {'type':2, 'color':GRAY, 'location':(15,15),'xys':[(4*2**0.5,4*2**0.5)]}
+        ],
+        4: [ # Target
+            {'type':2, 'color':GRAY, 'location':(30,20),'xys':[(4,4)]},
+            {'type':2, 'color':GRAY, 'location':(10,10),'xys':[(7,7)]},
+            {'type':2, 'color':GRAY, 'location':(20,15),'xys':[(10,10)]}
+        ],
+        5: [ # YouTube
+            {'type':1, 'color':GRAY, 'location':(5,5),  'xys':[(0,0),(13,0),(13,10),(0,10)]},
+            {'type':1, 'color':GRAY, 'location':(20,15),'xys':[(0,0),(5,3),(0,6)]},
+            {'type':1, 'color':GRAY, 'location':(10,20),'xys':[(0,0),(5,3),(0,6)]}
+        ],
+        6: [ # Map
+            {'type':1, 'color':GRAY, 'location':(17,5), 'xys':[(0,0),(8,8),(16,0)]},
+            {'type':2, 'color':GRAY, 'location':(20,19),'xys':[(10,10)]},
+            {'type':2, 'color':GRAY, 'location':(7,7),  'xys':[(4*2**0.5,4*2**0.5)]},
+            {'type':2, 'color':GRAY, 'location':(8,15), 'xys':[(4*2**0.5,4*2**0.5)]}
+        ]}
+
+    def __init__(self, level_id):
         self.level_id = level_id
-        self.plate_definitions = plate_definitions
+        self.plate_definitions = Level.level_data[level_id]
+        self.answer = Level.level_answer[level_id]
 
     def load(self, board):
         # Clear existing plates
@@ -271,7 +342,7 @@ class Level:
                 tuple(spec['location']),
                 spec['xys']
             )
-            board.add_plate(plate)
+            board.add_plate(plate)      
 
 
 # Initialize Pygame and constants
@@ -327,44 +398,29 @@ def draw_color_buttons():
 board = Board()
 
 
-# Define level data
-level_data = {
-    1: [ # Moon
-        {'type':2, 'color':GRAY, 'location':(20,20), 'xys':[(7,7)]},
-        {'type':2, 'color':GRAY, 'location':(15,15), 'xys':[(10,10)]}
-    ],
-    2: [ # Cloud
-        {'type':1, 'color':GRAY, 'location':(5,12),   'xys':[(0,0),(12,0),(12,12),(0,12)]},
-        {'type':2, 'color':GRAY, 'location':(20,10), 'xys':[(3,3)]},
-        {'type':2, 'color':GRAY, 'location':(25,15), 'xys':[(5,5)]}
-    ],
-    3: [ # Heart
-        {'type':1, 'color':GRAY, 'location':(10,10),'xys':[(0,0),(8,8),(16,0),(8,-8)]},
-        {'type':2, 'color':GRAY, 'location':(20,20),'xys':[(4*2**0.5,4*2**0.5)]},
-        {'type':2, 'color':GRAY, 'location':(15,15),'xys':[(4*2**0.5,4*2**0.5)]}
-    ],
-    4: [ # Target
-        {'type':2, 'color':GRAY, 'location':(30,20),'xys':[(3,3)]},
-        {'type':2, 'color':GRAY, 'location':(10,10),'xys':[(8,8)]},
-        {'type':2, 'color':GRAY, 'location':(20,15),'xys':[(10,10)]}
-    ],
-    5: [ # YouTube
-        {'type':1, 'color':GRAY, 'location':(5,5),  'xys':[(0,0),(16,0),(16,10),(0,10)]},
-        {'type':1, 'color':GRAY, 'location':(20,15),'xys':[(0,0),(5,3),(0,6)]},
-        {'type':1, 'color':GRAY, 'location':(10,20),'xys':[(0,0),(5,3),(0,6)]}
-    ],
-    6: [ # Map
-        {'type':1, 'color':GRAY, 'location':(17,5), 'xys':[(0,0),(8,8),(16,0)]},
-        {'type':2, 'color':GRAY, 'location':(20,19),'xys':[(10,10)]},
-        {'type':2, 'color':GRAY, 'location':(7,7),  'xys':[(4*2**0.5,4*2**0.5)]},
-        {'type':2, 'color':GRAY, 'location':(8,15), 'xys':[(4*2**0.5,4*2**0.5)]}
-    ]
-}
-
 # Load the desired level
-current_level = 5
-level = Level(current_level, level_data[current_level])
+current_level = 6
+level = Level(current_level)
 level.load(board)
+
+def check_answer(board, current_level):
+    answer = Level.level_answer[current_level]
+    initial = answer[0][2]
+    for plate in board.plates:
+        if plate.plate_xys == initial:
+            ini = plate.plate_location
+    print("Initial:", initial)
+    for plate in board.plates:
+        curr = False
+        for (loc, color, xys) in answer:
+            if xys == plate.plate_xys:
+                print(loc, (plate.plate_location[0] - ini[0], plate.plate_location[1] - ini[1]))
+                if color == plate.plate_color and loc == (plate.plate_location[0] - ini[0], plate.plate_location[1] - ini[1]):
+                    curr = True
+        if not curr:
+            return False
+    return True
+
 
 
 selected_plate = None
@@ -423,6 +479,11 @@ while running:
 
 
     if show_isometric:
+        if check_answer(board, current_level):
+            print("win")
+
+
+    
         isoBoard = IsoBoard(board.plates)
         isoProjection = IsoProjection(board.plates, scale=1.8, offset=(10, 80))
         isoBoard.draw_board(screen)      # Draw plates
