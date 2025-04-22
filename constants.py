@@ -1,0 +1,16 @@
+# constants.py
+
+# Grid
+CELL_SIZE = 15
+BOARD_WIDTH = 40
+BOARD_HEIGHT = 30
+
+# Colors
+LIGHT_GRID = (230, 230, 230, 255)
+GRAY = (100, 100, 100, 160)
+REDD = (239, 72, 60, 160)
+GREEND = (25, 115, 23, 160)
+BLUED = (25, 115, 192, 160)
+
+# Display
+SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
