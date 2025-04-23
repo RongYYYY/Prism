@@ -14,21 +14,16 @@ Board: A container for plates that:
 
 Level: Represents a game level:
 - defines which plates to load onto the board
-
-(TBA) Round: Represents a game round, containing:
-- a `Board`
-- a target number or condition
-- logic to check for completion (e.g., goal state)
+- defines the win/lose logic of each level
 
 Interface Features:
 - Grid Dimensions: 40x30 (with cell size = 15px)
-- Plate Color: White by default, change via color buttons
-- Toggle View: Switch between 2D and isometric projection using SPACE
+- Plate Color: Gray by default, change via color buttons
 - Plate Dragging: Move plates by dragging the small black handle
+- Press SPACE to toggle view (switch between 2D and isometric projection)
+- Press ENTER to check solution and view result screen
+- Level Selection on startup (6 levels)
 """
-
-
-# main.py
 
 import pygame
 import sys
@@ -43,9 +38,10 @@ from models.iso_projection import IsoProjection
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Luminara Demo")
-FONT = pygame.font.SysFont("couriernew", 24)
+FONT = pygame.font.SysFont("couriernew", 48)
+BUTTON_FONT = pygame.font.SysFont("couriernew", 32)
 
-# === Define Colors & Buttons ===
+# === Colors & Buttons ===
 WHITE = additive_blend([REDD, GREEND, BLUED])
 color_buttons = [
     (REDD, pygame.Rect(720, 150, 50, 50)),
@@ -53,16 +49,40 @@ color_buttons = [
     (BLUED, pygame.Rect(720, 350, 50, 50))
 ]
 
+# === State Variables ===
 selected_color = None
 selected_plate = None
 show_isometric = False
-
-# === Initialize Board and Level ===
+show_result_screen = False
+show_level_select = True
+result_text = ""
+current_level = None
 board = Board()
-current_level = 6
-level = Level(current_level)
-level.load(board)
+level = None
 
+# === Level Selection Layout ===
+BUTTON_WIDTH = 120
+BUTTON_HEIGHT = 60
+LEVEL_COLS = 3
+LEVEL_ROWS = 2
+margin_x = 80
+spacing_x = (SCREEN_WIDTH - 2*margin_x - LEVEL_COLS*BUTTON_WIDTH) // (LEVEL_COLS - 1)
+margin_y = 200
+spacing_y = 40
+level_buttons = []
+for lvl in range(1, LEVEL_COLS * LEVEL_ROWS + 1):
+    idx = lvl - 1
+    row = idx // LEVEL_COLS
+    col = idx % LEVEL_COLS
+    x = margin_x + col * (BUTTON_WIDTH + spacing_x)
+    y = margin_y + row * (BUTTON_HEIGHT + spacing_y)
+    rect = pygame.Rect(x, y, BUTTON_WIDTH, BUTTON_HEIGHT)
+    level_buttons.append((lvl, rect))
+
+# === Result screen return button ===
+home_button = pygame.Rect(SCREEN_WIDTH // 2 - 75, SCREEN_HEIGHT // 2 + 60, 150, 50)
+
+# === Helpers ===
 def draw_color_buttons():
     for color, rect in color_buttons:
         pygame.draw.rect(screen, color, rect)
@@ -86,18 +106,40 @@ def check_answer(board, current_level):
             return False
     return True
 
-# === Game Loop ===
+# === Main Loop ===
 running = True
 while running:
-    screen.fill(WHITE)
-
+    # Event Handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-        elif event.type == pygame.KEYDOWN:
+        # Level selection input
+        if show_level_select:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                for lvl, rect in level_buttons:
+                    if rect.collidepoint(event.pos):
+                        current_level = lvl
+                        level = Level(current_level)
+                        level.load(board)
+                        show_level_select = False
+                        show_result_screen = False
+            continue
+
+        if show_result_screen:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if home_button.collidepoint(event.pos):
+                    show_result_screen = False
+                    show_level_select = True
+            continue
+
+        # Game input
+        if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 show_isometric = not show_isometric
+            elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                show_result_screen = True
+                result_text = "Win :D" if check_answer(board, current_level) else "Lose :("
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             for color, rect in color_buttons:
@@ -129,33 +171,48 @@ while running:
             selected_plate.plate_location = (x, y)
             selected_plate.xy_to_coordinates()
 
-    # === Draw ===
-    if show_isometric:
-        if check_answer(board, current_level):
-            print("Win!")
+    # === Drawing ===
+    if show_level_select:
+        screen.fill(WHITE)
+        title_surf = FONT.render("Select Level", True, (0, 0, 0))
+        title_rect = title_surf.get_rect(center=(SCREEN_WIDTH // 2, 100))
+        screen.blit(title_surf, title_rect)
+        for lvl, rect in level_buttons:
+            pygame.draw.rect(screen, LIGHT_GRID, rect)
+            pygame.draw.rect(screen, (0, 0, 0), rect, 2)
+            txt = instr = pygame.font.SysFont("couriernew", 24).render(f"Level {lvl}", True, (0, 0, 0))
+            txt_rect = txt.get_rect(center=rect.center)
+            screen.blit(txt, txt_rect)
 
-        isoBoard = IsoBoard(board.plates)
-        isoProjection = IsoProjection(board.plates, scale=1.8, offset=(10, 80))
-        isoBoard.draw_board(screen)
-        isoBoard.draw_grid()
-        isoProjection.draw_projection(screen, blit_position=(400, 0))
+    elif show_result_screen:
+        screen.fill(WHITE)
+        txt = FONT.render(result_text, True, (0, 0, 0))
+        screen.blit(txt, txt.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)))
+        pygame.draw.rect(screen, LIGHT_GRID, home_button)
+        pygame.draw.rect(screen, (0, 0, 0), home_button, 2)
+        txt = BUTTON_FONT.render("Home", True, (0, 0, 0))
+        screen.blit(txt, txt.get_rect(center=home_button.center))
 
-        LIGHT = (255, 255, 100, 80)
-        light_source = (80, 300)
-        all_corners = [pt for plate in isoBoard.isoPlates for pt in plate[2] if plate[2]]
-
-        if all_corners:
-            top_point = min(all_corners, key=lambda p: p[1])
-            bottom_point = max(all_corners, key=lambda p: p[1])
-            light_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-            pygame.draw.polygon(light_surface, LIGHT, [light_source, top_point, bottom_point])
-            screen.blit(light_surface, (0, 0))
     else:
-        board.draw_grid(screen)
-        board.draw_board(screen)
-        draw_color_buttons()
-        instruction_text = FONT.render("Press SPACE to toggle view", True, (0, 0, 0))
-        screen.blit(instruction_text, (SCREEN_WIDTH // 2 - instruction_text.get_width() // 2, SCREEN_HEIGHT - 60))
+        screen.fill(WHITE)
+        if show_isometric:
+            iso_board = IsoBoard(board.plates)
+            iso_proj = IsoProjection(board.plates, scale=1.8, offset=(10, 80))
+            iso_board.draw_board(screen)
+            iso_board.draw_grid()
+            iso_proj.draw_projection(screen, blit_position=(400, 0))
+            instr = pygame.font.SysFont("couriernew", 24).render(
+                "SPACE: Toggle view | ENTER: Check solution", True, (255, 255, 255)
+            )
+            screen.blit(instr, instr.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50)))
+        else:
+            board.draw_grid(screen)
+            board.draw_board(screen)
+            draw_color_buttons()
+            instr = pygame.font.SysFont("couriernew", 24).render(
+                "SPACE: Toggle view | ENTER: Check solution", True, (0, 0, 0)
+            )
+            screen.blit(instr, instr.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50)))
 
     pygame.display.flip()
 
