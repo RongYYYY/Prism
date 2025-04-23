@@ -23,6 +23,7 @@ Interface Features:
 - Press SPACE to toggle view (switch between 2D and isometric projection)
 - Press ENTER to check solution and view result screen
 - Level Selection on startup (6 levels)
+- Home button (top-left) to return to level select
 """
 
 import pygame
@@ -59,6 +60,11 @@ result_text = ""
 current_level = None
 board = Board()
 level = None
+
+# === Load Home Button Image ===
+home_icon = pygame.image.load("images/home.png")
+home_icon = pygame.transform.scale(home_icon, (40, 40))
+home_icon_rect = home_icon.get_rect(topleft=(20, 20))
 
 # === Level Selection Layout ===
 BUTTON_WIDTH = 120
@@ -126,11 +132,16 @@ while running:
                         show_result_screen = False
             continue
 
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if home_icon_rect.collidepoint(event.pos):
+                show_level_select = True
+                show_result_screen = False
+
         if show_result_screen:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if home_button.collidepoint(event.pos):
                     show_result_screen = False
-                    show_level_select = True
+                    if check_answer(board, current_level): show_level_select = True
             continue
 
         # Game input
@@ -139,7 +150,8 @@ while running:
                 show_isometric = not show_isometric
             elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                 show_result_screen = True
-                result_text = "Win :D" if check_answer(board, current_level) else "Lose :("
+                result_text = "Win :D" if check_answer(board, current_level) else "Try again :("
+                button_text = "Home" if check_answer(board, current_level) else "Back"
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             for color, rect in color_buttons:
@@ -177,10 +189,11 @@ while running:
         title_surf = FONT.render("Select Level", True, (0, 0, 0))
         title_rect = title_surf.get_rect(center=(SCREEN_WIDTH // 2, 100))
         screen.blit(title_surf, title_rect)
+        level_name = ["Heart", "Cloud", "Moon", "YouTube", "Target", "Map"]
         for lvl, rect in level_buttons:
             pygame.draw.rect(screen, LIGHT_GRID, rect)
             pygame.draw.rect(screen, (0, 0, 0), rect, 2)
-            txt = instr = pygame.font.SysFont("couriernew", 24).render(f"Level {lvl}", True, (0, 0, 0))
+            txt = instr = pygame.font.SysFont("couriernew", 24).render(f"{level_name[lvl-1]}", True, (0, 0, 0))
             txt_rect = txt.get_rect(center=rect.center)
             screen.blit(txt, txt_rect)
 
@@ -190,11 +203,12 @@ while running:
         screen.blit(txt, txt.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)))
         pygame.draw.rect(screen, LIGHT_GRID, home_button)
         pygame.draw.rect(screen, (0, 0, 0), home_button, 2)
-        txt = BUTTON_FONT.render("Home", True, (0, 0, 0))
+        txt = BUTTON_FONT.render(button_text, True, (0, 0, 0))
         screen.blit(txt, txt.get_rect(center=home_button.center))
 
     else:
         screen.fill(WHITE)
+        screen.blit(home_icon, home_icon_rect)
         if show_isometric:
             iso_board = IsoBoard(board.plates)
             iso_proj = IsoProjection(board.plates, scale=1.8, offset=(10, 80))
