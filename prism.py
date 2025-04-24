@@ -50,21 +50,25 @@ color_buttons = [
     (BLUED, pygame.Rect(720, 350, 50, 50))
 ]
 
+# === Load Assets ===
+start_image = pygame.image.load("images/start.jpg")
+instruction_image = pygame.image.load("images/instruction.png")
+home_icon = pygame.image.load("images/home.png")
+home_icon = pygame.transform.scale(home_icon, (40, 40))
+home_icon_rect = home_icon.get_rect(topleft=(20, 20))
+
 # === State Variables ===
 selected_color = None
 selected_plate = None
-show_isometric = True
+show_isometric = False
+show_start_screen = True
+show_instruction_screen = False
 show_result_screen = False
 show_level_select = True
 result_text = ""
 current_level = None
 board = Board()
 level = None
-
-# === Load Home Button Image ===
-home_icon = pygame.image.load("images/home.png")
-home_icon = pygame.transform.scale(home_icon, (40, 40))
-home_icon_rect = home_icon.get_rect(topleft=(20, 20))
 
 # === Level Selection Layout ===
 BUTTON_WIDTH = 120
@@ -85,8 +89,11 @@ for lvl in range(1, LEVEL_COLS * LEVEL_ROWS + 1):
     rect = pygame.Rect(x, y, BUTTON_WIDTH, BUTTON_HEIGHT)
     level_buttons.append((lvl, rect))
 
-# === Result screen return button ===
-home_button = pygame.Rect(SCREEN_WIDTH // 2 - 75, SCREEN_HEIGHT // 2 + 60 + 100, 150, 50)
+# === Instruction and Result Navigation ===
+home_button = pygame.Rect(SCREEN_WIDTH // 2 - 75, SCREEN_HEIGHT // 2 + 160, 150, 50)
+enter_text_rect = pygame.Rect(SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT - 100, 200, 40)
+next_text_rect = pygame.Rect(SCREEN_WIDTH - 150, SCREEN_HEIGHT - 60, 120, 40)
+back_text_rect = pygame.Rect(50, SCREEN_HEIGHT - 60, 120, 40)
 
 # === Helpers ===
 def draw_color_buttons():
@@ -120,6 +127,18 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+        if show_start_screen:
+            if event.type == pygame.MOUSEBUTTONDOWN and enter_text_rect.collidepoint(event.pos):
+                show_start_screen = False
+                show_instruction_screen = True
+            continue
+
+        if show_instruction_screen:
+            if event.type == pygame.MOUSEBUTTONDOWN and next_text_rect.collidepoint(event.pos):
+                show_instruction_screen = False
+                show_level_select = True
+            continue
+
         # Level selection input
         if show_level_select:
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -132,13 +151,16 @@ while running:
                         show_result_screen = True
                         result_text = f"{level.level_name}"
                         button_text = "Start"
+            if event.type == pygame.MOUSEBUTTONDOWN and back_text_rect.collidepoint(event.pos):
+                show_level_select = False
+                show_instruction_screen = True
             continue
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if home_icon_rect.collidepoint(event.pos):
                 show_level_select = True
                 show_result_screen = False
-                show_isometric = True
+                show_isometric = False
 
         if show_result_screen:
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -187,7 +209,17 @@ while running:
             selected_plate.xy_to_coordinates()
 
     # === Drawing ===
-    if show_level_select:
+    if show_start_screen:
+        screen.blit(pygame.transform.scale(start_image, (SCREEN_WIDTH, SCREEN_HEIGHT)), (0, 0))
+        txt = BUTTON_FONT.render("Enter the Game", True, (255, 255, 255))
+        screen.blit(txt, txt.get_rect(center=enter_text_rect.center))
+
+    elif show_instruction_screen:
+        screen.blit(pygame.transform.scale(instruction_image, (SCREEN_WIDTH, SCREEN_HEIGHT)), (0, 0))
+        txt = BUTTON_FONT.render("Next>", True, (255, 255, 255))
+        screen.blit(txt, txt.get_rect(center=next_text_rect.center))
+
+    elif show_level_select:
         screen.fill(WHITE)
         title_surf = FONT.render("Select Level", True, (0, 0, 0))
         title_rect = title_surf.get_rect(center=(SCREEN_WIDTH // 2, 100))
@@ -198,6 +230,8 @@ while running:
             txt = instr = pygame.font.SysFont("couriernew", 24).render(f"{Level.level_names[lvl-1]}", True, (0, 0, 0))
             txt_rect = txt.get_rect(center=rect.center)
             screen.blit(txt, txt_rect)
+        back_txt = BUTTON_FONT.render("<Back", True, (0, 0, 0))
+        screen.blit(back_txt, back_txt.get_rect(center=back_text_rect.center))
 
     elif show_result_screen:
         screen.fill(WHITE)
