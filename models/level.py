@@ -6,7 +6,7 @@ import os
 import pygame
 
 IMAGE_FILENAMES = [
-    "Hear.png",    # Level 1 (Heart)
+    "Heart.png",    # Level 1 (Heart)
     "Cloud.png",   # Level 2 (Cloud)
     "Moon.png",    # Level 3 (Moon)
     "Youtube.png", # Level 4 (YouTube)

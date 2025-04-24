@@ -53,6 +53,7 @@ color_buttons = [
 # === Load Assets ===
 start_image = pygame.image.load("images/start.jpg")
 instruction_image = pygame.image.load("images/instruction.png")
+bg = pygame.image.load("images/bg.png")
 home_icon = pygame.image.load("images/home.png")
 home_icon = pygame.transform.scale(home_icon, (40, 40))
 home_icon_rect = home_icon.get_rect(topleft=(20, 20))
@@ -78,7 +79,7 @@ LEVEL_COLS = 3
 LEVEL_ROWS = 2
 margin_x = 80
 spacing_x = (SCREEN_WIDTH - 2*margin_x - LEVEL_COLS*BUTTON_WIDTH) // (LEVEL_COLS - 1)
-margin_y = 200
+margin_y = 250
 spacing_y = 40
 level_buttons = []
 for lvl in range(1, LEVEL_COLS * LEVEL_ROWS + 1):
@@ -224,9 +225,9 @@ while running:
         screen.blit(txt, txt.get_rect(center=next_text_rect.center))
 
     elif show_level_select:
-        screen.fill(WHITE)
-        title_surf = FONT.render("Select Level", True, (0, 0, 0))
-        title_rect = title_surf.get_rect(center=(SCREEN_WIDTH // 2, 100))
+        screen.blit(pygame.transform.scale(bg, (SCREEN_WIDTH, SCREEN_HEIGHT)), (0, 0))
+        title_surf = FONT.render("Select Level", True, (255, 255, 255))
+        title_rect = title_surf.get_rect(center=(SCREEN_WIDTH // 2, 150))
         screen.blit(title_surf, title_rect)
         for lvl, rect in level_buttons:
             if lvl in level_completed:
@@ -234,16 +235,16 @@ while running:
             else:
                 pygame.draw.rect(screen, LIGHT_GRID, rect)
             pygame.draw.rect(screen, (0, 0, 0), rect, 2)
-            txt = instr = pygame.font.SysFont("couriernew", 24).render(f"{Level.level_names[lvl-1]}", True, (0, 0, 0))
+            txt = pygame.font.SysFont("couriernew", 24).render(Level.level_names[lvl-1], True, (0, 0, 0))
             txt_rect = txt.get_rect(center=rect.center)
             screen.blit(txt, txt_rect)
-        back_txt = BUTTON_FONT.render("<Back", True, (0, 0, 0))
+        back_txt = BUTTON_FONT.render("<Back", True, (255, 255, 255))
         screen.blit(back_txt, back_txt.get_rect(center=back_text_rect.center))
 
     elif show_result_screen:
-        screen.fill(WHITE)
-        level.draw_level_icon(screen, (0, -100), (800, 600))
-        txt = FONT.render(result_text, True, (0, 0, 0))
+        screen.blit(pygame.transform.scale(bg, (SCREEN_WIDTH, SCREEN_HEIGHT)), (0, 0))
+        level.draw_level_icon(screen, pos=(160, 60), size=(480, 360))
+        txt = FONT.render(result_text, True, (255, 255, 255))
         screen.blit(txt, txt.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 100)))
         pygame.draw.rect(screen, LIGHT_GRID, home_button)
         pygame.draw.rect(screen, (0, 0, 0), home_button, 2)
