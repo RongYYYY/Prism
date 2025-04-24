@@ -2,8 +2,21 @@
 
 from models.plate import Plates
 from constants import GRAY, REDD, GREEND, BLUED
+import os
+import pygame
+
+IMAGE_FILENAMES = [
+    "Hear.png",    # Level 1 (Heart)
+    "Cloud.png",   # Level 2 (Cloud)
+    "Moon.png",    # Level 3 (Moon)
+    "Youtube.png", # Level 4 (YouTube)
+    "Target.png",  # Level 5 (Target)
+    "Map.png"      # Level 6 (Map)
+]
+
 
 class Level:
+    
     level_answer = {
         3: [
             [(0, 0), GREEND, [(7, 7)]],
@@ -73,6 +86,7 @@ class Level:
         self.level_id = level_id
         self.plate_definitions = Level.level_data[level_id]
         self.answer = Level.level_answer[level_id]
+        self.target = self.load_level_icon()
 
     def load(self, board):
         board.plates.clear()
@@ -84,3 +98,16 @@ class Level:
                 spec['xys']
             )
             board.add_plate(plate)
+
+    def load_level_icon(self):
+        filename = IMAGE_FILENAMES[self.level_id - 1]
+        curr_dir = os.path.dirname(os.path.abspath(__file__))
+        image_dir = os.path.join(curr_dir, '..', 'images')
+        path = os.path.join(image_dir, filename)
+        image = pygame.image.load(path).convert_alpha()
+        return image
+    
+    def draw_level_icon(self, screen, pos=(-100, -50), size=(400, 300)):
+        icon = pygame.transform.smoothscale(self.target, size)
+        # icon_rect = self.target.get_rect(center=(100, 75))
+        screen.blit(icon, pos)

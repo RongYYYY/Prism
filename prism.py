@@ -53,7 +53,7 @@ color_buttons = [
 # === State Variables ===
 selected_color = None
 selected_plate = None
-show_isometric = False
+show_isometric = True
 show_result_screen = False
 show_level_select = True
 result_text = ""
@@ -86,7 +86,7 @@ for lvl in range(1, LEVEL_COLS * LEVEL_ROWS + 1):
     level_buttons.append((lvl, rect))
 
 # === Result screen return button ===
-home_button = pygame.Rect(SCREEN_WIDTH // 2 - 75, SCREEN_HEIGHT // 2 + 60, 150, 50)
+home_button = pygame.Rect(SCREEN_WIDTH // 2 - 75, SCREEN_HEIGHT // 2 + 60 + 100, 150, 50)
 
 # === Helpers ===
 def draw_color_buttons():
@@ -199,8 +199,9 @@ while running:
 
     elif show_result_screen:
         screen.fill(WHITE)
+        level.draw_level_icon(screen, (0, -100), (800, 600))
         txt = FONT.render(result_text, True, (0, 0, 0))
-        screen.blit(txt, txt.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)))
+        screen.blit(txt, txt.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 100)))
         pygame.draw.rect(screen, LIGHT_GRID, home_button)
         pygame.draw.rect(screen, (0, 0, 0), home_button, 2)
         txt = BUTTON_FONT.render(button_text, True, (0, 0, 0))
@@ -219,6 +220,11 @@ while running:
                 "SPACE: Toggle view | ENTER: Check solution", True, (255, 255, 255)
             )
             screen.blit(instr, instr.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50)))
+            level.draw_level_icon(screen)
+            ttt = pygame.font.SysFont("couriernew", 18).render(
+                "Target Shape", True, (255, 255, 255)
+            )
+            screen.blit(ttt, ttt.get_rect(center=(105, 20)))
         else:
             board.draw_grid(screen)
             board.draw_board(screen)
@@ -227,6 +233,16 @@ while running:
                 "SPACE: Toggle view | ENTER: Check solution", True, (0, 0, 0)
             )
             screen.blit(instr, instr.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50)))
+            if selected_color:
+                color_name = "Red" if selected_color == REDD else "Green" if selected_color == GREEND else "Blue"
+                instrSelect = pygame.font.SysFont("couriernew", 16).render(
+                f"Drag controller to move shape | Click controller to color {color_name}", True, (0, 0, 0)
+            )
+            else:
+                instrSelect = pygame.font.SysFont("couriernew", 16).render(
+                f"Drag controller to move shape | Select color to assign", True, (0, 0, 0)
+            )
+            screen.blit(instrSelect, instrSelect.get_rect(center=(SCREEN_WIDTH // 2 + 70, 40)))
 
     pygame.display.flip()
 
