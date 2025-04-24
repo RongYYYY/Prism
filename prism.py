@@ -69,6 +69,7 @@ result_text = ""
 current_level = None
 board = Board()
 level = None
+level_completed = []
 
 # === Level Selection Layout ===
 BUTTON_WIDTH = 120
@@ -117,6 +118,7 @@ def check_answer(board, current_level):
                     curr = True
         if not curr:
             return False
+    level_completed.append(current_level)
     return True
 
 # === Main Loop ===
@@ -167,6 +169,8 @@ while running:
                 if home_button.collidepoint(event.pos):
                     show_result_screen = False
                     if check_answer(board, current_level): show_level_select = True
+            # if event.type == pygame.MOUSEBUTTONDOWN and back_text_rect.collidepoint(event.pos):
+            #     show_level_select = True
             continue
 
         # Game input
@@ -225,7 +229,10 @@ while running:
         title_rect = title_surf.get_rect(center=(SCREEN_WIDTH // 2, 100))
         screen.blit(title_surf, title_rect)
         for lvl, rect in level_buttons:
-            pygame.draw.rect(screen, LIGHT_GRID, rect)
+            if lvl in level_completed:
+                pygame.draw.rect(screen, (160, 160, 160), rect)
+            else:
+                pygame.draw.rect(screen, LIGHT_GRID, rect)
             pygame.draw.rect(screen, (0, 0, 0), rect, 2)
             txt = instr = pygame.font.SysFont("couriernew", 24).render(f"{Level.level_names[lvl-1]}", True, (0, 0, 0))
             txt_rect = txt.get_rect(center=rect.center)
@@ -242,6 +249,9 @@ while running:
         pygame.draw.rect(screen, (0, 0, 0), home_button, 2)
         txt = BUTTON_FONT.render(button_text, True, (0, 0, 0))
         screen.blit(txt, txt.get_rect(center=home_button.center))
+        # back_txt = BUTTON_FONT.render("<Exit", True, (0, 0, 0))
+        # screen.blit(back_txt, back_txt.get_rect(center=back_text_rect.center))
+        screen.blit(home_icon, home_icon_rect)
 
     else:
         screen.fill(WHITE)

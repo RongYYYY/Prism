@@ -110,7 +110,7 @@ class Level:
         image = pygame.image.load(path).convert_alpha()
         return image
     
-    def draw_level_icon(self, screen, pos=(-100, -50), size=(400, 300)):
+    def draw_level_icon(self, screen, pos=(-60, -20), size=(320, 240)):
         icon = pygame.transform.smoothscale(self.target, size)
         # icon_rect = self.target.get_rect(center=(100, 75))
         screen.blit(icon, pos)
