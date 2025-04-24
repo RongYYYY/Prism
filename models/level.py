@@ -16,6 +16,8 @@ IMAGE_FILENAMES = [
 
 
 class Level:
+
+    level_names = ["Heart", "Cloud", "Moon", "YouTube", "Target", "Map"]
     
     level_answer = {
         3: [
@@ -87,6 +89,7 @@ class Level:
         self.plate_definitions = Level.level_data[level_id]
         self.answer = Level.level_answer[level_id]
         self.target = self.load_level_icon()
+        self.level_name = Level.level_names[level_id - 1]
 
     def load(self, board):
         board.plates.clear()

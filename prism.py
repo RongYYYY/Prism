@@ -129,13 +129,16 @@ while running:
                         level = Level(current_level)
                         level.load(board)
                         show_level_select = False
-                        show_result_screen = False
+                        show_result_screen = True
+                        result_text = f"{level.level_name}"
+                        button_text = "Start"
             continue
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if home_icon_rect.collidepoint(event.pos):
                 show_level_select = True
                 show_result_screen = False
+                show_isometric = True
 
         if show_result_screen:
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -189,11 +192,10 @@ while running:
         title_surf = FONT.render("Select Level", True, (0, 0, 0))
         title_rect = title_surf.get_rect(center=(SCREEN_WIDTH // 2, 100))
         screen.blit(title_surf, title_rect)
-        level_name = ["Heart", "Cloud", "Moon", "YouTube", "Target", "Map"]
         for lvl, rect in level_buttons:
             pygame.draw.rect(screen, LIGHT_GRID, rect)
             pygame.draw.rect(screen, (0, 0, 0), rect, 2)
-            txt = instr = pygame.font.SysFont("couriernew", 24).render(f"{level_name[lvl-1]}", True, (0, 0, 0))
+            txt = instr = pygame.font.SysFont("couriernew", 24).render(f"{Level.level_names[lvl-1]}", True, (0, 0, 0))
             txt_rect = txt.get_rect(center=rect.center)
             screen.blit(txt, txt_rect)
 
